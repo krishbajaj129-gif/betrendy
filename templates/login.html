@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Log In | BeTrendy Fashion Intelligence{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo-wrapper">
+        <a href="{{ url_for('index') }}" title="Back to home">
+          <img src="{{ url_for('static', filename='images/logo-light-bg.png') }}" alt="BeTrendy" class="auth-logo-img">
+        </a>
+      </div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Log in to view and manage your saved favourite fashion trends.</p>
+
+      <form method="POST" action="{{ url_for('login') }}{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-control" placeholder="e.g. fashionfanatic" required autofocus value="{{ username or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group form-check" style="margin-bottom: 1.5rem;">
+          <input type="checkbox" id="remember" name="remember" checked>
+          <label for="remember">Remember me on this browser</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Log in to BeTrendy
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account yet? <a href="{{ url_for('register') }}">Create an account</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

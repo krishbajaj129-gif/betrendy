@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}My Saved Favourites | BeTrendy{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+
+  <!-- Header -->
+  <div class="section-header" style="margin-bottom: 1.5rem;">
+    <div>
+      <h1 class="brand-font" style="font-size: 2.2rem; margin-bottom: 0.35rem;">
+        My Saved <span class="highlight">Favourites</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 1rem;">
+        Track your handpicked silhouettes with real-time velocity metrics.
+      </p>
+    </div>
+    {% if current_user.is_authenticated and favourites %}
+      <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm">
+        + Discover More Trends
+      </a>
+    {% endif %}
+  </div>
+
+  {% if not current_user.is_authenticated %}
+    <!-- Logged Out State Notice -->
+    <div class="empty-state">
+      <div class="empty-state-icon">🔒</div>
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Log in to Save Favourites</h2>
+      <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem;">
+        You can explore all trends without logging in, but you'll need an account to save clothing items and keep your personal watchlist.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 0.8rem;">
+        <a href="{{ url_for('login') }}?next={{ url_for('favourites_page') }}" class="btn btn-primary">
+          Log in
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-outline">
+          Create free account
+        </a>
+      </div>
+    </div>
+
+  {% elif not favourites %}
+    <!-- Logged In but No Favourites Yet -->
+    <div class="empty-state">
+      <div class="empty-state-icon">❤️</div>
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">No Favourites Saved Yet</h2>
+      <p style="color: var(--text-secondary); max-width: 450px; margin: 0 auto 1.5rem;">
+        Start exploring the live trends dashboard and tap the heart icon on any hang tag or table item to save it here.
+      </p>
+      <a href="{{ url_for('index') }}" class="btn btn-primary">
+        Explore Streetwear Trends
+      </a>
+    </div>
+
+  {% else %}
+    <!-- Saved Favourites Grid -->
+    <div class="fav-grid">
+      {% for item in favourites %}
+        <div class="fav-card" id="fav-card-{{ item.id }}">
+          <!-- Image Container with Fallback -->
+          <div class="fav-card-image">
+            {% set img_slug = item.item_name | lower | replace(' ', '-') %}
+            <img 
+              src="{{ url_for('static', filename='images/' ~ img_slug ~ '.jpg') }}" 
+              alt="{{ item.item_name }}"
+              class="hang-tag-img"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="img-fallback-tile alt-grad-1" style="display: none;">
+              <span class="fallback-initial">{{ item.item_name[0] | upper }}</span>
+              <span class="fallback-name">{{ item.item_name }}</span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="fav-card-body">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight: 800; text-transform: capitalize;">
+                  {{ item.item_name }}
+                </h3>
+                <span class="hang-tag-category">{{ item.category }}</span>
+              </div>
+              
+              <!-- Status Pill -->
+              {% if item.status == 'Rising' %}
+                <span class="status-pill status-rising">▲ Rising</span>
+              {% elif item.status == 'Declining' %}
+                <span class="status-pill status-declining">▼ Declining</span>
+              {% else %}
+                <span class="status-pill status-stable">● Stable</span>
+              {% endif %}
+            </div>
+
+            <!-- Stats -->
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 0.75rem 0;">
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Growth vs Baseline</span>
+                <span style="font-size: 1.25rem; font-weight: 800; font-family: 'Syne', sans-serif; color: {% if item.growth_rate >= 15 %}#059669{% elif item.growth_rate <= -15 %}#dc2626{% else %}#d97706{% endif %};">
+                  {{ '+' if item.growth_rate > 0 else '' }}{{ item.growth_rate }}%
+                </span>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Current Score</span>
+                <span style="font-size: 1.1rem; font-weight: 700;">{{ item.current_score }}/100</span>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline Canvas -->
+            <div style="margin: 0.5rem 0;">
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">12-Week Sparkline</span>
+              <canvas class="fav-sparkline-canvas" data-sparkline="{{ item.sparkline | tojson }}" style="width: 100%; height: 35px;"></canvas>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="fav-card-actions">
+              <button 
+                type="button" 
+                class="btn btn-outline btn-sm"
+                onclick="removeFavourite('{{ item.item_name }}', '{{ item.id }}')"
+                style="color: var(--accent-red); border-color: var(--border-light);"
+              >
+                💔 Remove
+              </button>
+              
+              <a href="{{ url_for('index') }}" class="btn btn-dark btn-sm">
+                View in Trends
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Sparklines on Favourites Page
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".fav-sparkline-canvas").forEach(canvas => {
+    try {
+      const data = JSON.parse(canvas.getAttribute("data-sparkline"));
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.parentElement.clientWidth || 200;
+      const h = canvas.height = 35;
+      
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.strokeStyle = "#ff2e93";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      
+      data.forEach((val, i) => {
+        const x = (i / (data.length - 1)) * (w - 8) + 4;
+        const y = h - ((val - min) / range) * (h - 10) - 5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    } catch (e) {
+      console.warn("Sparkline render error", e);
+    }
+  });
+});
+
+// Remove Favourite function
+async function removeFavourite(itemName, cardId) {
+  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  try {
+    const res = await fetch('/api/favourites/toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token
+      },
+      body: JSON.stringify({ item_name: itemName })
+    });
+    const data = await res.json();
+    if (res.ok && !data.saved) {
+      const card = document.getElementById(`fav-card-${cardId}`);
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          card.remove();
+          // Check if any remain
+          if (document.querySelectorAll('.fav-card').length === 0) {
+            location.reload();
+          }
+        }, 250);
+      }
+    }
+  } catch (err) {
+    alert("Could not remove item. Please try again.");
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account | BeTrendy{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo-wrapper">
+        <a href="{{ url_for('index') }}" title="Back to home">
+          <img src="{{ url_for('static', filename='images/logo-light-bg.png') }}" alt="BeTrendy" class="auth-logo-img">
+        </a>
+      </div>
+      <h1 class="auth-title">Join BeTrendy</h1>
+      <p class="auth-subtitle">Create a free profile to track your favourite fashion silhouettes.</p>
+
+      <form method="POST" action="{{ url_for('register') }}">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-control" placeholder="Choose a username (3-30 chars)" required autofocus value="{{ username or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="At least 6 characters" minlength="6" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-type your password" minlength="6" required>
+        </div>
+
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          🔒 Security Notice: Passwords are automatically hashed via Werkzeug's modern scrypt/pbkdf2 algorithm before storing in the SQLite database.
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already registered? <a href="{{ url_for('login') }}">Log in here</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
