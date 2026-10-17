@@ -433,5 +433,7 @@ def export_csv():
 
 
 if __name__ == '__main__':
-    print(">> Starting BeTrendy server at http://127.0.0.1:5000 (accessible locally and on LAN via port 5000)")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() in ('true', '1')
+    print(f">> Starting BeTrendy server on port {port} (debug={debug})")
+    app.run(debug=debug, host='0.0.0.0', port=port)
