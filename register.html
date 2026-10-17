@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | BeTrendy</title>
+  <meta name="description" content="AI and Google Trends powered fashion trend analyzer. Track rising streetwear, forecast upcoming silhouettes, and save your favourite looks.">
+
+  <!-- Google Fonts: Syne & Poppins for chunky headers, Inter for clean body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/images/favicon.png">
+  <link rel="apple-touch-icon" href="/static/images/favicon.png">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSRF Token Meta for AJAX Requests -->
+  <meta name="csrf-token" content="4880efd47b4d04e763dc9485454a991719431ab63ce71f31">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-wrapper">
+      <!-- Brand Logo -->
+      <a href="index.html" class="logo-brand" aria-label="BeTrendy Home">
+        <img src="/static/images/logo-light-bg.png" alt="BeTrendy" class="nav-logo-img">
+        <span class="logo-badge">PRO</span>
+      </a>
+
+      <!-- Navigation Links -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link ">Trends</a></li>
+          <li><a href="favourites.html" class="nav-link ">Favourites</a></li>
+          <li><a href="about.html" class="nav-link ">About</a></li>
+        </ul>
+      </nav>
+
+      <!-- Right Navigation Actions -->
+      <div class="nav-actions">
+        <!-- Sample Data Toggle Switch -->
+        <label class="sample-toggle-wrapper" title="Switch between live Google Trends and local sample dataset">
+          <span>Sample data</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="sampleDataToggle" >
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+
+        <!-- User Authentication State -->
+        
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="login.html" class="btn btn-outline btn-sm">Log in</a>
+            <a href="register.html" class="btn btn-primary btn-sm">Sign up</a>
+          </div>
+        
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages Alert Bar -->
+  <div class="container flash-container">
+    
+      
+    
+  </div>
+
+  <!-- Main Page Content -->
+  <main class="animate-entrance">
+    
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo-wrapper">
+        <a href="index.html" title="Back to home">
+          <img src="/static/images/logo-light-bg.png" alt="BeTrendy" class="auth-logo-img">
+        </a>
+      </div>
+      <h1 class="auth-title">Join BeTrendy</h1>
+      <p class="auth-subtitle">Create a free profile to track your favourite fashion silhouettes.</p>
+
+      <form method="POST" action="/register">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="4880efd47b4d04e763dc9485454a991719431ab63ce71f31">
+
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-control" placeholder="Choose a username (3-30 chars)" required autofocus value="">
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="At least 6 characters" minlength="6" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-type your password" minlength="6" required>
+        </div>
+
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          🔒 Security Notice: Passwords are automatically hashed via Werkzeug's modern scrypt/pbkdf2 algorithm before storing in the SQLite database.
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already registered? <a href="login.html">Log in here</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </main>
+
+  <!-- Modern Streetwear Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <div class="footer-brand">
+          <img src="/static/images/logo-black.png" alt="BeTrendy" class="footer-logo-img">
+        </div>
+        <p style="font-size: 0.82rem; margin-top: 0.25rem;">Next-generation fashion analytics & demand forecasting.</p>
+      </div>
+
+      <div class="footer-notice">
+        Data: Google Trends. Scores are relative (0 to 100), not search counts.
+      </div>
+
+      <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <span>&copy; 2026 BeTrendy &bull; College Project Evaluator Edition</span>
+        <span>&bull;</span>
+        <a href="about.html" style="color: #cbd5e1; text-decoration: underline;">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vanilla JavaScript App Logic -->
+  <script src="/static/js/app.js"></script>
+  
+</body>
+</html>

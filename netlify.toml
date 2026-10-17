@@ -1,0 +1,32 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/api/trends*"
+  to = "/data/trends.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/forecast*"
+  to = "/data/forecast.json"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/favourites"
+  to = "/favourites.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/register"
+  to = "/register.html"
+  status = 200

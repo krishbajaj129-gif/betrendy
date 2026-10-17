@@ -1,0 +1,6 @@
+/api/trends*      /data/trends.json        200
+/api/forecast*    /data/forecast.json      200
+/about            /about.html              200
+/favourites       /favourites.html         200
+/login            /login.html              200
+/register         /register.html           200

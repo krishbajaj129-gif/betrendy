@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Saved Favourites | BeTrendy</title>
+  <meta name="description" content="AI and Google Trends powered fashion trend analyzer. Track rising streetwear, forecast upcoming silhouettes, and save your favourite looks.">
+
+  <!-- Google Fonts: Syne & Poppins for chunky headers, Inter for clean body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/images/favicon.png">
+  <link rel="apple-touch-icon" href="/static/images/favicon.png">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSRF Token Meta for AJAX Requests -->
+  <meta name="csrf-token" content="4880efd47b4d04e763dc9485454a991719431ab63ce71f31">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-wrapper">
+      <!-- Brand Logo -->
+      <a href="index.html" class="logo-brand" aria-label="BeTrendy Home">
+        <img src="/static/images/logo-light-bg.png" alt="BeTrendy" class="nav-logo-img">
+        <span class="logo-badge">PRO</span>
+      </a>
+
+      <!-- Navigation Links -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link ">Trends</a></li>
+          <li><a href="favourites.html" class="nav-link active">Favourites</a></li>
+          <li><a href="about.html" class="nav-link ">About</a></li>
+        </ul>
+      </nav>
+
+      <!-- Right Navigation Actions -->
+      <div class="nav-actions">
+        <!-- Sample Data Toggle Switch -->
+        <label class="sample-toggle-wrapper" title="Switch between live Google Trends and local sample dataset">
+          <span>Sample data</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="sampleDataToggle" >
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+
+        <!-- User Authentication State -->
+        
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="login.html" class="btn btn-outline btn-sm">Log in</a>
+            <a href="register.html" class="btn btn-primary btn-sm">Sign up</a>
+          </div>
+        
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages Alert Bar -->
+  <div class="container flash-container">
+    
+      
+    
+  </div>
+
+  <!-- Main Page Content -->
+  <main class="animate-entrance">
+    
+<div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+
+  <!-- Header -->
+  <div class="section-header" style="margin-bottom: 1.5rem;">
+    <div>
+      <h1 class="brand-font" style="font-size: 2.2rem; margin-bottom: 0.35rem;">
+        My Saved <span class="highlight">Favourites</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 1rem;">
+        Track your handpicked silhouettes with real-time velocity metrics.
+      </p>
+    </div>
+    
+  </div>
+
+  
+    <!-- Logged Out State Notice -->
+    <div class="empty-state">
+      <div class="empty-state-icon">🔒</div>
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Log in to Save Favourites</h2>
+      <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem;">
+        You can explore all trends without logging in, but you'll need an account to save clothing items and keep your personal watchlist.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 0.8rem;">
+        <a href="/login?next=/favourites" class="btn btn-primary">
+          Log in
+        </a>
+        <a href="register.html" class="btn btn-outline">
+          Create free account
+        </a>
+      </div>
+    </div>
+
+  
+
+</div>
+
+  </main>
+
+  <!-- Modern Streetwear Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <div class="footer-brand">
+          <img src="/static/images/logo-black.png" alt="BeTrendy" class="footer-logo-img">
+        </div>
+        <p style="font-size: 0.82rem; margin-top: 0.25rem;">Next-generation fashion analytics & demand forecasting.</p>
+      </div>
+
+      <div class="footer-notice">
+        Data: Google Trends. Scores are relative (0 to 100), not search counts.
+      </div>
+
+      <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <span>&copy; 2026 BeTrendy &bull; College Project Evaluator Edition</span>
+        <span>&bull;</span>
+        <a href="about.html" style="color: #cbd5e1; text-decoration: underline;">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vanilla JavaScript App Logic -->
+  <script src="/static/js/app.js"></script>
+  
+<script>
+// Sparklines on Favourites Page
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".fav-sparkline-canvas").forEach(canvas => {
+    try {
+      const data = JSON.parse(canvas.getAttribute("data-sparkline"));
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.parentElement.clientWidth || 200;
+      const h = canvas.height = 35;
+      
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.strokeStyle = "#ff2e93";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      
+      data.forEach((val, i) => {
+        const x = (i / (data.length - 1)) * (w - 8) + 4;
+        const y = h - ((val - min) / range) * (h - 10) - 5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    } catch (e) {
+      console.warn("Sparkline render error", e);
+    }
+  });
+});
+
+// Remove Favourite function
+async function removeFavourite(itemName, cardId) {
+  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  try {
+    const res = await fetch('/api/favourites/toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token
+      },
+      body: JSON.stringify({ item_name: itemName })
+    });
+    const data = await res.json();
+    if (res.ok && !data.saved) {
+      const card = document.getElementById(`fav-card-${cardId}`);
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          card.remove();
+          // Check if any remain
+          if (document.querySelectorAll('.fav-card').length === 0) {
+            location.reload();
+          }
+        }, 250);
+      }
+    }
+  } catch (err) {
+    alert("Could not remove item. Please try again.");
+  }
+}
+</script>
+
+</body>
+</html>

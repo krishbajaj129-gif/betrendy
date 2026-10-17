@@ -203,13 +203,41 @@ async function fetchTrendData() {
   const sampleParam = AppState.forceSample ? '1' : '0';
   const url = `/api/trends?category=${AppState.category}&geo=${AppState.geo}&timeframe=${AppState.timeframe}&sample=${sampleParam}`;
 
+  let data;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    const data = await res.json();
+    data = await res.json();
+  } catch (apiErr) {
+    console.warn('API unreachable, checking static fallback data/trends.json:', apiErr);
+    try {
+      const fallbackRes = await fetch('data/trends.json');
+      if (!fallbackRes.ok) throw new Error(`Fallback HTTP error ${fallbackRes.status}`);
+      data = await fallbackRes.json();
+    } catch (fallbackErr) {
+      console.error('Failed to load trends:', fallbackErr);
+      const container = document.getElementById('hangTagsContainer');
+      if (container) {
+        container.innerHTML = `<div class="hang-tag-card" style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+          <h3>Could not load trends data</h3>
+          <p style="color: var(--text-muted); margin-top: 0.5rem;">Please check your connection or switch on Sample Data.</p>
+        </div>`;
+      }
+      return;
+    }
+  }
 
+  try {
     AppState.items = data.items || [];
     AppState.dates = data.dates || [];
+
+    // Filter items according to current category selection if on static mode
+    let filteredItems = AppState.items;
+    if (AppState.category && AppState.category !== 'both') {
+      filteredItems = AppState.items.filter(i => i.category === AppState.category);
+    }
+    const risingSorted = [...filteredItems].filter(i => i.status === 'Rising').sort((a, b) => b.growth_rate - a.growth_rate);
+    const topRising = risingSorted.slice(0, 3);
 
     // Handle Sample Notice Banner
     const noticeBanner = document.getElementById('sampleNoticeBanner');
@@ -231,21 +259,13 @@ async function fetchTrendData() {
     }
 
     // Render Components
-    renderHangTags(data.top_rising || []);
+    renderHangTags(topRising.length > 0 ? topRising : (data.top_rising || []));
     renderMoversChart();
     renderForecastChips();
     fetchAndRenderForecast();
     renderItemsTable();
-
-  } catch (err) {
-    console.error('Failed to load trends:', err);
-    const container = document.getElementById('hangTagsContainer');
-    if (container) {
-      container.innerHTML = `<div class="hang-tag-card" style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-        <h3>Could not load trends data</h3>
-        <p style="color: var(--text-muted); margin-top: 0.5rem;">Please check your connection or switch on Sample Data.</p>
-      </div>`;
-    }
+  } catch (renderErr) {
+    console.error('Render error:', renderErr);
   }
 }
 
@@ -512,10 +532,24 @@ async function fetchAndRenderForecast() {
   const sampleParam = AppState.forceSample ? '1' : '0';
   const url = `/api/forecast?items=${itemsParam}&geo=${AppState.geo}&timeframe=${AppState.timeframe}&sample=${sampleParam}`;
 
+  let data;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    const data = await res.json();
+    data = await res.json();
+  } catch (apiErr) {
+    console.warn('Forecast API unreachable, checking fallback data/forecast.json:', apiErr);
+    try {
+      const fallbackRes = await fetch('data/forecast.json');
+      if (fallbackRes.ok) {
+        data = await fallbackRes.json();
+      } else {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+  }
 
     const historicalDates = data.historical_dates || [];
     const futureDates = data.future_dates || [];
@@ -847,6 +881,19 @@ async function toggleFavourite(itemName, category, buttonEl) {
       alert(data.error || 'Failed to update favourite.');
     }
   } catch (err) {
-    console.error('Favourite toggle error:', err);
+    console.warn('Backend unavailable, using localStorage for favourites:', err);
+    let favs = JSON.parse(localStorage.getItem('betrendy_favourites') || '[]');
+    const isSaved = favs.includes(itemName);
+    if (isSaved) {
+      favs = favs.filter(x => x !== itemName);
+    } else {
+      favs.push(itemName);
+    }
+    localStorage.setItem('betrendy_favourites', JSON.stringify(favs));
+    document.querySelectorAll(`button[onclick*="'${itemName}'"]`).forEach(btn => {
+      btn.classList.toggle('active', !isSaved);
+    });
+    const item = AppState.items.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+    if (item) item.is_favourite = !isSaved;
   }
 }
