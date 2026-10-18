@@ -50,14 +50,20 @@ function toSlug(name) {
 /**
  * Initialize application when DOM is ready.
  */
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   // Only initialize on pages containing the dashboard elements
   if (!document.getElementById('hangTagsContainer')) return;
 
   initEventListeners();
   loadInitialStateFromUrl();
   fetchTrendData();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 /**
  * Read query parameters from URL if present.
@@ -528,28 +534,31 @@ async function fetchAndRenderForecast() {
   const canvas = document.getElementById('forecastChart');
   if (!canvas) return;
 
-  const itemsParam = encodeURIComponent(AppState.selectedForecastItems.join(','));
-  const sampleParam = AppState.forceSample ? '1' : '0';
-  const url = `/api/forecast?items=${itemsParam}&geo=${AppState.geo}&timeframe=${AppState.timeframe}&sample=${sampleParam}`;
-
-  let data;
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    data = await res.json();
-  } catch (apiErr) {
-    console.warn('Forecast API unreachable, checking fallback data/forecast.json:', apiErr);
+    const itemsParam = encodeURIComponent(AppState.selectedForecastItems.join(','));
+    const sampleParam = AppState.forceSample ? '1' : '0';
+    const url = `/api/forecast?items=${itemsParam}&geo=${AppState.geo}&timeframe=${AppState.timeframe}&sample=${sampleParam}`;
+
+    let data;
     try {
-      const fallbackRes = await fetch('data/forecast.json');
-      if (fallbackRes.ok) {
-        data = await fallbackRes.json();
-      } else {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      data = await res.json();
+    } catch (apiErr) {
+      console.warn('Forecast API unreachable, checking fallback data/forecast.json:', apiErr);
+      try {
+        const fallbackRes = await fetch('data/forecast.json');
+        if (fallbackRes.ok) {
+          data = await fallbackRes.json();
+        } else {
+          return;
+        }
+      } catch (e) {
         return;
       }
-    } catch (e) {
-      return;
     }
-  }
+
+    if (!data) return;
 
     const historicalDates = data.historical_dates || [];
     const futureDates = data.future_dates || [];

@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- CSRF Token Meta for AJAX Requests -->
-  <meta name="csrf-token" content="4880efd47b4d04e763dc9485454a991719431ab63ce71f31">
+  <meta name="csrf-token" content="f0309a274b48e9840c49f51066ee44ab75734bd8cbae74e6">
 </head>
 <body>
 
@@ -93,7 +93,7 @@
 
   
     <!-- Logged Out State Notice -->
-    <div class="empty-state">
+    <div class="empty-state" id="emptyStateBox">
       <div class="empty-state-icon">🔒</div>
       <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Log in to Save Favourites</h2>
       <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem;">
@@ -110,6 +110,8 @@
     </div>
 
   
+  <!-- Saved Favourites Dynamic Grid for Netlify/Static hosting -->
+  <div class="fav-grid" id="staticFavGrid" style="display: none;"></div>
 
 </div>
 
@@ -141,11 +143,12 @@
   <script src="/static/js/app.js"></script>
   
 <script>
-// Sparklines on Favourites Page
-document.addEventListener("DOMContentLoaded", function() {
+// Sparklines rendering helper
+function drawFavSparklines() {
   document.querySelectorAll(".fav-sparkline-canvas").forEach(canvas => {
     try {
       const data = JSON.parse(canvas.getAttribute("data-sparkline"));
+      if (!data || data.length < 2) return;
       const ctx = canvas.getContext("2d");
       const w = canvas.width = canvas.parentElement.clientWidth || 200;
       const h = canvas.height = 35;
@@ -172,13 +175,122 @@ document.addEventListener("DOMContentLoaded", function() {
       console.warn("Sparkline render error", e);
     }
   });
-});
+}
+
+// Client-side Favourites loader for static hosting (Netlify)
+async function initStaticFavourites() {
+  const savedNames = JSON.parse(localStorage.getItem('betrendy_favourites') || '[]');
+  const emptyBox = document.getElementById('emptyStateBox');
+  const favGrid = document.getElementById('staticFavGrid');
+
+  if (!savedNames || savedNames.length === 0) {
+    if (emptyBox) emptyBox.style.display = 'block';
+    if (favGrid) favGrid.style.display = 'none';
+    return;
+  }
+
+  try {
+    let items = [];
+    try {
+      const res = await fetch('/api/trends?category=both&geo=IN&timeframe=today+12-m&sample=1');
+      if (res.ok) {
+        const data = await res.json();
+        items = data.items || [];
+      }
+    } catch (e) {}
+
+    if (items.length === 0) {
+      const res2 = await fetch('data/trends.json');
+      if (res2.ok) {
+        const data2 = await res2.json();
+        items = data2.items || [];
+      }
+    }
+
+    const matched = items.filter(it => savedNames.some(s => s.toLowerCase() === it.name.toLowerCase()));
+    if (matched.length === 0) {
+      if (emptyBox) emptyBox.style.display = 'block';
+      if (favGrid) favGrid.style.display = 'none';
+      return;
+    }
+
+    if (emptyBox) emptyBox.style.display = 'none';
+    if (favGrid) {
+      favGrid.style.display = 'grid';
+      favGrid.innerHTML = matched.map((item, idx) => {
+        const slug = toSlug(item.name);
+        const growthColor = item.growth_rate >= 15 ? '#059669' : (item.growth_rate <= -15 ? '#dc2626' : '#d97706');
+        const sign = item.growth_rate > 0 ? '+' : '';
+        const initial = item.name.charAt(0).toUpperCase();
+
+        return `
+          <div class="fav-card" id="fav-card-local-${idx}">
+            <div class="fav-card-image">
+              <img 
+                src="/static/images/${slug}.jpg" 
+                alt="${item.name}"
+                class="hang-tag-img"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              >
+              <div class="img-fallback-tile alt-grad-1" style="display: none;">
+                <span class="fallback-initial">${initial}</span>
+                <span class="fallback-name">${item.name}</span>
+              </div>
+            </div>
+            <div class="fav-card-body">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div>
+                  <h3 style="font-size: 1.15rem; font-weight: 800; text-transform: capitalize;">${item.name}</h3>
+                  <span class="hang-tag-category">${item.category}</span>
+                </div>
+                <span class="status-pill status-${item.status.toLowerCase()}">${item.status === 'Rising' ? '▲' : (item.status === 'Declining' ? '▼' : '●')} ${item.status}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 0.75rem 0;">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Growth vs Baseline</span>
+                  <span style="font-size: 1.25rem; font-weight: 800; font-family: 'Syne', sans-serif; color: ${growthColor};">
+                    ${sign}${item.growth_rate}%
+                  </span>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Current Score</span>
+                  <span style="font-size: 1.1rem; font-weight: 700;">${item.current_score}/100</span>
+                </div>
+              </div>
+              <div style="margin: 0.5rem 0;">
+                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">12-Week Sparkline</span>
+                <canvas class="fav-sparkline-canvas" data-sparkline='${JSON.stringify(item.sparkline)}' style="width: 100%; height: 35px;"></canvas>
+              </div>
+              <div class="fav-card-actions">
+                <button 
+                  type="button" 
+                  class="btn btn-outline btn-sm"
+                  onclick="removeFavourite('${item.name}', 'local-${idx}')"
+                  style="color: var(--accent-red); border-color: var(--border-light);"
+                >
+                  💔 Remove
+                </button>
+                <a href="index.html" class="btn btn-dark btn-sm">View in Trends</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      setTimeout(drawFavSparklines, 50);
+    }
+  } catch (err) {
+    console.warn("Could not load static favourites:", err);
+  }
+}
 
 // Remove Favourite function
 async function removeFavourite(itemName, cardId) {
-  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  // Try server API first
   try {
-    const res = await fetch('/api/favourites/toggle', {
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    const token = metaToken ? metaToken.getAttribute('content') : '';
+    await fetch('/api/favourites/toggle', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -186,24 +298,37 @@ async function removeFavourite(itemName, cardId) {
       },
       body: JSON.stringify({ item_name: itemName })
     });
-    const data = await res.json();
-    if (res.ok && !data.saved) {
-      const card = document.getElementById(`fav-card-${cardId}`);
-      if (card) {
-        card.style.opacity = '0';
-        card.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-          card.remove();
-          // Check if any remain
-          if (document.querySelectorAll('.fav-card').length === 0) {
-            location.reload();
-          }
-        }, 250);
-      }
-    }
   } catch (err) {
-    alert("Could not remove item. Please try again.");
+    // Expected on purely static hosts
   }
+
+  // Update localStorage
+  let favs = JSON.parse(localStorage.getItem('betrendy_favourites') || '[]');
+  favs = favs.filter(x => x.toLowerCase() !== itemName.toLowerCase());
+  localStorage.setItem('betrendy_favourites', JSON.stringify(favs));
+
+  const card = document.getElementById(`fav-card-${cardId}`);
+  if (card) {
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      card.remove();
+      const remaining = document.querySelectorAll('.fav-card');
+      if (remaining.length === 0) {
+        initStaticFavourites();
+      }
+    }, 250);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", () => {
+    drawFavSparklines();
+    initStaticFavourites();
+  });
+} else {
+  drawFavSparklines();
+  initStaticFavourites();
 }
 </script>
 
