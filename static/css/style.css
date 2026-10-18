@@ -1547,9 +1547,44 @@ input:checked + .toggle-slider::before {
   font-size: 0.92rem;
 }
 
+.project-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.project-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.project-info-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Syne', sans-serif;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 900px) {
   .about-cards-grid {
     grid-template-columns: 1fr;
   }
 }
+
 
